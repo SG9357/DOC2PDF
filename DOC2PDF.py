@@ -4,12 +4,13 @@ import streamlit as st
 import os
 import tempfile
 import time
-from docx2pdf import convert
+import pypandoc
+import pdfkit
 
 st.set_page_config(
-    page_title='DOC2PDF', 
-    layout="centered", 
-    initial_sidebar_state="auto", 
+    page_title='DOC2PDF',
+    layout="centered",
+    initial_sidebar_state="auto",
     menu_items=None
 )
 
@@ -30,16 +31,18 @@ def save_uploadedfile(uploadedfile):
     return file_path
 
 def convert_to_pdf(file_path):
-    # Create a temporary directory for the output PDF
-    temp_dir = tempfile.gettempdir()
-    pdf_path = os.path.join(temp_dir, os.path.splitext(os.path.basename(file_path))[0] + ".pdf")
+    # Convert DOCX to HTML
+    html_path = os.path.splitext(file_path)[0] + ".html"
+    pypandoc.convert_file(file_path, 'html', outputfile=html_path)
     
-    # Convert DOCX to PDF
-    convert(file_path, pdf_path)
+    # Convert HTML to PDF
+    pdf_path = os.path.splitext(file_path)[0] + ".pdf"
+    pdfkit.from_file(html_path, pdf_path)
     
     with open(pdf_path, "rb") as pdf_file:
         pdf_content = pdf_file.read()
     
+    os.remove(html_path)
     os.remove(pdf_path)
     return pdf_content
 
