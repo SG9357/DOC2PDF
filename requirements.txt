@@ -1,3 +1,1 @@
-pdfkit
-pypandoc
-pandoc
+libreoffice
