@@ -1,1 +1,2 @@
-docx2pdf
+pdfkit
+pypandoc
