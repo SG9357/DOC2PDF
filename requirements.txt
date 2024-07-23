@@ -1,8 +1,1 @@
-zipfile
-streamlit
 comtypes
-comtypes.client
-pythoncom
-os
-tempfile
-time
