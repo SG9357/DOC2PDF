@@ -1,7 +1,7 @@
 import io
 import zipfile
 import streamlit as st
-from docx2pdf import convert
+import subprocess
 import os
 import tempfile
 import time
@@ -30,7 +30,7 @@ def save_uploadedfile(uploadedfile):
 
 def convert_to_pdf_stream(docx_file):
     output_pdf = os.path.splitext(docx_file)[0] + '.pdf'
-    convert(docx_file, output_pdf)
+    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', docx_file, '--outdir', os.path.dirname(output_pdf)], check=True)
     
     with open(output_pdf, "rb") as pdf_file:
         pdf_stream = io.BytesIO(pdf_file.read())
