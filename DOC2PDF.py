@@ -1,24 +1,25 @@
 import io
 import zipfile
 import streamlit as st
-import subprocess
 import os
 import tempfile
 import time
+from docx2pdf import convert
 
 st.set_page_config(
-    page_title='DOC2PDF',
-    layout="centered",
-    initial_sidebar_state="auto",
+    page_title='DOC2PDF', 
+    layout="centered", 
+    initial_sidebar_state="auto", 
     menu_items=None
 )
 
 hide_streamlit_style = """
-            <style>
-            footer {visibility: hidden;}
-            </style>
-            """
+    <style>
+    footer {visibility: hidden;}
+    </style>
+    """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 def save_uploadedfile(uploadedfile):
     temp_dir = os.path.join(os.getcwd(), "temp_files")
@@ -28,17 +29,21 @@ def save_uploadedfile(uploadedfile):
         f.write(uploadedfile.getbuffer())
     return file_path
 
-def convert_to_pdf_stream(docx_file):
-    output_pdf = os.path.splitext(docx_file)[0] + '.pdf'
-    subprocess.run(['unoconv', '-f', 'pdf', docx_file], check=True)
+def convert_to_pdf(file_path):
+    # Create a temporary directory for the output PDF
+    temp_dir = tempfile.gettempdir()
+    pdf_path = os.path.join(temp_dir, os.path.splitext(os.path.basename(file_path))[0] + ".pdf")
     
-    with open(output_pdf, "rb") as pdf_file:
-        pdf_stream = io.BytesIO(pdf_file.read())
+    # Convert DOCX to PDF
+    convert(file_path, pdf_path)
     
-    os.remove(output_pdf)
-    return pdf_stream.getvalue()
+    with open(pdf_path, "rb") as pdf_file:
+        pdf_content = pdf_file.read()
+    
+    os.remove(pdf_path)
+    return pdf_content
 
-def convertToPdf(Files, InputType):
+def converToPdf(Files, InputType):
     Flag = None
     temp_zip_path = os.path.join(tempfile.gettempdir(), "documents.zip")
 
@@ -49,17 +54,17 @@ def convertToPdf(Files, InputType):
                 for filename in os.listdir(File_path):
                     if filename.endswith(".docx") or filename.endswith(".doc"):
                         file = os.path.join(File_path, filename)
-                        pdf_content = convert_to_pdf_stream(file)
+                        pdf_content = convert_to_pdf(file)
                         zip_file.writestr(os.path.splitext(filename)[0] + ".pdf", pdf_content)
             elif InputType == 'Multiple':
                 for uploaded_file in Files:
                     file_path = save_uploadedfile(uploaded_file)
-                    pdf_content = convert_to_pdf_stream(file_path)
+                    pdf_content = convert_to_pdf(file_path)
                     zip_file.writestr(os.path.splitext(uploaded_file.name)[0] + ".pdf", pdf_content)
                     os.remove(file_path)
             elif InputType == 'Single':
                 file_path = save_uploadedfile(Files)
-                pdf_content = convert_to_pdf_stream(file_path)
+                pdf_content = convert_to_pdf(file_path)
                 zip_file.writestr(os.path.splitext(Files.name)[0] + ".pdf", pdf_content)
                 os.remove(file_path)
             Flag = True
@@ -68,6 +73,7 @@ def convertToPdf(Files, InputType):
             Flag = False
 
     return temp_zip_path, Flag
+
 
 def main():
     st.markdown("<h1 style='background-color: #B8D1D8;font-family: Papyrus, fantasy;text-align: center;box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'>DOC 2 PDF Converter</h1><br/><br/>", unsafe_allow_html=True)
@@ -87,12 +93,12 @@ def main():
             font-size:50%;
         }
         button[kind="primary"] {
-        background-color:#C1C8E4;
-        font-weight:bold;
-        box-shadow: rgba(240, 46, 170, 0.4) -5px 5px, rgba(240, 46, 170, 0.3) -10px 10px, rgba(240, 46, 170, 0.2) -15px 15px, rgba(240, 46, 170, 0.1) -20px 20px, rgba(240, 46, 170, 0.05) -25px 25px;
+            background-color:#C1C8E4;
+            font-weight:bold;
+            box-shadow: rgba(240, 46, 170, 0.4) -5px 5px, rgba(240, 46, 170, 0.3) -10px 10px, rgba(240, 46, 170, 0.2) -15px 15px, rgba(240, 46, 170, 0.1) -20px 20px, rgba(240, 46, 170, 0.05) -25px 25px;
         }
         button[kind="primary"]:hover {
-        background-color: #DEB89B;
+            background-color: #DEB89B;
         }
         [class="css-mrc9ir ef3psqc11"] {
             background-color: #7FAD9C;
@@ -139,25 +145,25 @@ def main():
             if st.button('Generate PDF', type='primary'):
                 with col22:
                     st.markdown('<br/>', unsafe_allow_html=True)
-                    progress_bar = st.progress(0)
+                    progress_bar = st.progress(0) 
                     status_text = st.empty()  # Initialize the progress bar
                     for i in range(100):  # Simulate progress
                         time.sleep(0.05)  # Simulate work being done
                         progress_bar.progress(i + 1)  # Update progress bar
                     if pdf_file_path is None:
-                        pdf_file_path, Flag = convertToPdf(input_files, input_type)
+                        pdf_file_path, Flag = converToPdf(input_files, input_type)
                     if Flag:
-                        progress_bar.progress(100)
-                        st.snow()
+                        progress_bar.progress(100) 
+                        st.snow() 
                         status_text.text("Process completed. Please download your files.")
 
-        with col3:
+        with col3:    
             if Flag:
                 with open(pdf_file_path, "rb") as temp_zip_file:
                     if st.download_button('Download Files', data=temp_zip_file, file_name='Documents.zip'):
                         pass
-
+                
                 os.remove(pdf_file_path)
-                pdf_file_path = None
+                pdf_file_path = None  
 
 main()
